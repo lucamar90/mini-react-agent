@@ -56,6 +56,10 @@ def render_trace(result: AgentResult, use_color: bool = True) -> str:
                 + f"{step.action}({step.action_input!r})"
             )
             lines.append(_c("     Observation: ", DIM, use_color) + (step.observation or ""))
+        elif step.observation:
+            # No action this step (e.g. malformed output) — surface the feedback
+            # that was sent back to the model so the self-correction is visible.
+            lines.append(_c("     Note: ", DIM, use_color) + step.observation)
     lines.append("  " + "─" * 56)
     if result.final_answer is not None:
         lines.append(_c("  Final Answer: ", GREEN, use_color) + result.final_answer)

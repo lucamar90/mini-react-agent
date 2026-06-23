@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import ast
 import operator
+import unicodedata
 from dataclasses import dataclass
 
 
@@ -68,8 +69,10 @@ class CalculatorTool(Tool):
     description = "Evaluate an arithmetic expression, e.g. '23 * (47 + 1)'."
 
     def run(self, tool_input: str) -> ToolResult:
+        # Accept common unicode math symbols (×, ÷, ·) found in natural prompts.
+        expr = tool_input.replace("×", "*").replace("÷", "/").replace("·", "*")
         try:
-            tree = ast.parse(tool_input, mode="eval")
+            tree = ast.parse(expr, mode="eval")
             value = _eval_node(tree.body)
         except (SyntaxError, ValueError, ZeroDivisionError) as exc:
             return ToolResult(ok=False, output=f"Error: {exc}")
@@ -80,25 +83,42 @@ class CalculatorTool(Tool):
 # search (tiny offline knowledge base — swap for a real API in production)
 # --------------------------------------------------------------------------- #
 
+# Bilingual (EN/IT) so the agent works in either language. Keys are matched
+# after accent/punctuation normalisation (see ``_normalize``).
 _KNOWLEDGE_BASE = {
     "capital of france": "Paris is the capital of France.",
+    "capitale della francia": "Parigi è la capitale della Francia.",
     "capital of japan": "Tokyo is the capital of Japan.",
+    "capitale del giappone": "Tokyo è la capitale del Giappone.",
     "capital of italy": "Rome is the capital of Italy.",
+    "capitale d'italia": "Roma è la capitale d'Italia.",
     "capital of australia": "Canberra is the capital of Australia.",
+    "capitale dell'australia": "Canberra è la capitale dell'Australia.",
     "speed of light": "The speed of light is about 299,792 kilometres per second.",
-    "python": "Python is a programming language first released in 1991 by Guido van Rossum.",
+    "velocità della luce": "La velocità della luce è circa 299.792 km al secondo.",
+    "innova": "Innova Web Design Studio crea esperienze digitali: siti, e-commerce, SEO e advertising.",
     "react agent": "ReAct is a prompting pattern interleaving Reasoning and Acting (tool use).",
 }
 
 
+def _normalize(text: str) -> str:
+    """Lowercase, strip accents and punctuation, collapse whitespace."""
+    text = unicodedata.normalize("NFKD", text)
+    text = "".join(c for c in text if not unicodedata.combining(c)).lower()
+    for ch in "?!.,;:'’\"":
+        text = text.replace(ch, " ")
+    return " ".join(text.split())
+
+
 class SearchTool(Tool):
     name = "search"
-    description = "Look up a fact in a small built-in knowledge base by keyword."
+    description = "Look up a fact in a small built-in knowledge base (English or Italian)."
 
     def run(self, tool_input: str) -> ToolResult:
-        query = tool_input.strip().lower()
+        query = _normalize(tool_input)
         for key, fact in _KNOWLEDGE_BASE.items():
-            if key in query or query in key:
+            norm_key = _normalize(key)
+            if norm_key and (norm_key in query or query in norm_key):
                 return ToolResult(ok=True, output=fact)
         return ToolResult(ok=True, output="No results found.")
 

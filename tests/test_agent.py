@@ -21,10 +21,10 @@ def test_demo_run_uses_every_tool_and_finishes():
     assert actions == ["search", "calculator", "word_count"]
 
     observations = [s.observation for s in result.steps if s.observation]
-    assert any("Tokyo" in o for o in observations)
+    assert any("Roma" in o for o in observations)
     assert "12" in observations
     assert "3" in observations
-    assert "Tokyo" in result.final_answer
+    assert "Roma" in result.final_answer
 
 
 def test_stops_at_max_steps_without_final_answer():

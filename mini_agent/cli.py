@@ -58,6 +58,17 @@ def _cmd_tools(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_serve(args: argparse.Namespace) -> int:
+    try:
+        from .web import run_server
+    except ImportError:
+        print("The web UI needs Flask. Install it with: pip install 'mini-react-agent[web]'")
+        return 2
+    print(f"mini-agent web UI → http://{args.host}:{args.port}  (Ctrl+C to stop)")
+    run_server(host=args.host, port=args.port)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="mini-agent",
@@ -87,6 +98,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     tools = sub.add_parser("tools", help="List the available tools.")
     tools.set_defaults(func=_cmd_tools)
+
+    serve = sub.add_parser("serve", help="Launch the local web UI (needs the 'web' extra).")
+    serve.add_argument("--host", default="127.0.0.1", help="Host to bind (default: 127.0.0.1).")
+    serve.add_argument("--port", type=int, default=5001, help="Port (default: 5001).")
+    serve.set_defaults(func=_cmd_serve)
 
     return parser
 

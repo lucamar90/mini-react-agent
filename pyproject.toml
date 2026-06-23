@@ -1,0 +1,38 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mini-react-agent"
+version = "0.1.0"
+description = "A tiny, readable ReAct agent: think -> act -> observe, with pluggable tools. Runs offline, no API key required."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Luca Marullo" }]
+keywords = ["llm", "agent", "react", "tool-use", "agentic", "openai", "anthropic", "ai"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = []
+
+[project.optional-dependencies]
+openai = ["openai>=1.0"]
+anthropic = ["anthropic>=0.40"]
+dev = ["pytest>=7.0"]
+
+[project.scripts]
+mini-agent = "mini_agent.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/lucamar90/mini-react-agent"
+Issues = "https://github.com/lucamar90/mini-react-agent/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["mini_agent"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
